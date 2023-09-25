@@ -8,7 +8,7 @@
 		<version>2.6.5</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>pro.sky</groupId>
+	<groupId>com.heimtn</groupId>
 	<artifactId>telegram-bot</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>telegram-bot</name>
