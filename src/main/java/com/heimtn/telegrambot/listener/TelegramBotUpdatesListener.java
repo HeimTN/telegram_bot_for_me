@@ -1,5 +1,8 @@
 package com.heimtn.telegrambot.listener;
 
+import com.heimtn.telegrambot.entity.NotificationTask;
+import com.heimtn.telegrambot.exceptions.TimeParseException;
+import com.heimtn.telegrambot.service.NotificationTaskService;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.TelegramException;
 import com.pengrad.telegrambot.UpdatesListener;
@@ -12,7 +15,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Service for processing incoming messages from users.
@@ -21,10 +28,12 @@ import java.util.List;
 public class TelegramBotUpdatesListener implements UpdatesListener {
 
     private Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
-    private static final String respElephant = "А ты купи слона!";
 
     @Autowired
     private TelegramBot telegramBot;
+
+    @Autowired
+    private NotificationTaskService taskService;
 
     @PostConstruct
     public void init() {
@@ -50,11 +59,16 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 if(userMessage.equals("/start")){
                     sendMessage(chatId, "Купи слона!");
                 }
+                //If the message matches the format "01.01.0001 01:01 msg" then parsing of this message is enabled.
+                else if(userMessage.matches("\\d{2}\\.\\d{2}\\.\\d{4} \\d{2}:\\d{2} .+")){
+                    saveTask(chatId, userMessage);
+                    sendMessage(chatId, "Задача сохранена! Между делом купи слона :)");
+                }
                 //If the message is different, send a universal reply.
                 else {
                     String response = "Все говорят: " + userMessage;
                     sendMessage(chatId, response);
-                    sendMessage(chatId, respElephant);
+                    sendMessage(chatId, "А ты купи слона!");
                 }
 
             }
@@ -69,7 +83,31 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      */
     private void sendMessage(long chatId, String text){
         SendMessage message = new SendMessage(chatId, text);
+        logger.info("Send message: {}", message);
         telegramBot.execute(message);
+    }
+
+    private NotificationTask parsingDate(String message){
+        Pattern pattern = Pattern.compile("(\\d{2}\\.\\d{2}\\.\\d{4} \\d{2}:\\d{2}) .+");
+        Matcher matcher = pattern.matcher(message);
+        if(matcher.find()){
+            String timeString = matcher.group(1);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyy HH:mm");
+            NotificationTask task = new NotificationTask();
+            task.setTime(LocalDateTime.parse(timeString, formatter));
+            task.setText(matcher.group(2));
+            return task;
+        } else {
+            logger.error("Parse date error: message:{}", message);
+            throw new TimeParseException("Problem with message, check parseDate method in TelegramBotUpdatesListener class");
+        }
+    }
+
+    private void saveTask(long chatId, String text){
+        NotificationTask task = parsingDate(text);
+        task.setChatId(chatId);
+        logger.info("Save task: {}", task);
+        taskService.addTask(task);
     }
 
 }
