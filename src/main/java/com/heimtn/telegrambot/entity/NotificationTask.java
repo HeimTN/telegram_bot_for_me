@@ -8,7 +8,6 @@ import java.util.Objects;
  * To the created table via liquibase, make a class with Entity annotation.
  */
 @Entity
-@Table(schema = "notification_task")
 public class NotificationTask {
 
     @Id

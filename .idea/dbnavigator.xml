@@ -22,6 +22,9 @@
   <component name="DBNavigator.Project.DatabaseFileManager">
     <open-files />
   </component>
+  <component name="DBNavigator.Project.DatasetFilterManager">
+    <filter-actions connection-id="ce50d24b-f6df-4f68-a04d-da25f1638535" dataset="public.notification_task" active-filter-id="" />
+  </component>
   <component name="DBNavigator.Project.FileConnectionMappingManager">
     <mapping file-url="file://$PROJECT_DIR$/src/main/resources/liquibase/scripts/heimtn.sql" connection-id="ce50d24b-f6df-4f68-a04d-da25f1638535" session-id="MAIN" current-schema="tgbot_db" />
   </component>

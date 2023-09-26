@@ -110,7 +110,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * @return Returning an unfinished task
      */
     private NotificationTask parsingDate(String message){
-        Pattern pattern = Pattern.compile("(\\d{2}\\.\\d{2}\\.\\d{4} \\d{2}:\\d{2}) .+");
+        Pattern pattern = Pattern.compile("(\\d{2}\\.\\d{2}\\.\\d{4} \\d{2}:\\d{2}) (.+)");
         Matcher matcher = pattern.matcher(message);
         if(matcher.find()){
             String timeString = matcher.group(1);

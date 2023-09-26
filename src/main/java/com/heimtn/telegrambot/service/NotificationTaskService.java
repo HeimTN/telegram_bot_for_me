@@ -33,6 +33,6 @@ public class NotificationTaskService {
     }
 
     public Collection<NotificationTask> getTaskByTime(LocalDateTime time){
-        return taskRepositories.findByTimeMsg(time);
+        return taskRepositories.findByTime(time);
     }
 }
