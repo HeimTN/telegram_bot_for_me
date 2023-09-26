@@ -12,11 +12,14 @@ import com.pengrad.telegrambot.request.SendMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,7 +31,6 @@ import java.util.regex.Pattern;
 public class TelegramBotUpdatesListener implements UpdatesListener {
 
     private Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
-
     @Autowired
     private TelegramBot telegramBot;
 
@@ -38,6 +40,15 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     @PostConstruct
     public void init() {
         telegramBot.setUpdatesListener(this);
+    }
+
+    /**
+     * Every minute we check to see if there are any notifications that need to be sent.
+     * @return A collection of tasks to be sent
+     */
+    @Scheduled(cron= "0 0/1 * * * *")
+    public Collection<NotificationTask> findTask(){
+        return taskService.getTaskByTime(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
     }
 
     /**
@@ -87,6 +98,11 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         telegramBot.execute(message);
     }
 
+    /**
+     * Parses the message, extracts the date and the message itself.
+     * @param message
+     * @return Returning an unfinished task
+     */
     private NotificationTask parsingDate(String message){
         Pattern pattern = Pattern.compile("(\\d{2}\\.\\d{2}\\.\\d{4} \\d{2}:\\d{2}) .+");
         Matcher matcher = pattern.matcher(message);
@@ -103,6 +119,11 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         }
     }
 
+    /**
+     * Complete the task and save it in the database
+     * @param chatId chat id, found out via message.chat().id();
+     * @param text message with the date to be parsed
+     */
     private void saveTask(long chatId, String text){
         NotificationTask task = parsingDate(text);
         task.setChatId(chatId);
