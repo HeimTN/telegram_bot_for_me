@@ -44,12 +44,18 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
     /**
      * Every minute we check to see if there are any notifications that need to be sent.
-     * @return A collection of tasks to be sent
+     * All found shuffles are sent to the right place at once.
      */
     @Scheduled(cron= "0 0/1 * * * *")
-    public Collection<NotificationTask> findTask(){
-        return taskService.getTaskByTime(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
+    public void findTask(){
+        Collection<NotificationTask> tasks = taskService.getTaskByTime(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
+        if(!tasks.isEmpty()){
+            tasks.forEach(task -> {
+                sendMessage(task.getChatId(), task.getText());
+            });
+        }
     }
+
 
     /**
      * A method for tracking changes in chat with users.
