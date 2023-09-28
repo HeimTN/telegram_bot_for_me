@@ -13,20 +13,21 @@ import java.util.Collection;
  */
 @Service
 public class NotificationTaskService {
-    @Autowired
-    private NotificationTaskRepositories taskRepositories;
+
+    private final NotificationTaskRepositories taskRepositories;
+
+    public NotificationTaskService(NotificationTaskRepositories taskRepositories){
+        this.taskRepositories = taskRepositories;
+    }
 
     public NotificationTask addTask(NotificationTask task){
         return taskRepositories.save(task);
     }
 
     public NotificationTask getTask(long id){
-        return taskRepositories.findById(id).get();
+        return taskRepositories.findById(id).orElse(null);
     }
 
-    public NotificationTask editTask(NotificationTask task){
-        return taskRepositories.save(task);
-    }
 
     public void deleteTask(long id){
         taskRepositories.deleteById(id);

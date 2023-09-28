@@ -30,12 +30,17 @@ import java.util.regex.Pattern;
 @Service
 public class TelegramBotUpdatesListener implements UpdatesListener {
 
-    private Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
-    @Autowired
-    private TelegramBot telegramBot;
+    private final Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
+    private final Pattern pattern = Pattern.compile("(\\d{2}\\.\\d{2}\\.\\d{4} \\d{2}:\\d{2}) (.+)");
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyy HH:mm");
 
-    @Autowired
-    private NotificationTaskService taskService;
+    private final TelegramBot telegramBot;
+    private final NotificationTaskService taskService;
+
+    public TelegramBotUpdatesListener(TelegramBot telegramBot, NotificationTaskService taskService){
+        this.telegramBot = telegramBot;
+        this.taskService = taskService;
+    }
 
     @PostConstruct
     public void init() {
@@ -68,7 +73,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             logger.info("Processing update: {}", update);
             Message message = update.message();
             //Process the message if it has arrived
-            if (message != null) {
+            if (message.text() != null) {
                 String userMessage = message.text();
                 long chatId = message.chat().id();
 
@@ -77,7 +82,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                     sendMessage(chatId, "Купи слона!");
                 }
                 //If the message matches the format "01.01.0001 01:01 msg" then parsing of this message is enabled.
-                else if(userMessage.matches("\\d{2}\\.\\d{2}\\.\\d{4} \\d{2}:\\d{2} .+")){
+                else if(pattern.matcher(userMessage).matches()){
                     saveTask(chatId, userMessage);
                     sendMessage(chatId, "Задача сохранена! Между делом купи слона :)");
                 }
@@ -110,11 +115,10 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * @return Returning an unfinished task
      */
     private NotificationTask parsingDate(String message){
-        Pattern pattern = Pattern.compile("(\\d{2}\\.\\d{2}\\.\\d{4} \\d{2}:\\d{2}) (.+)");
         Matcher matcher = pattern.matcher(message);
         if(matcher.find()){
             String timeString = matcher.group(1);
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyy HH:mm");
+
             NotificationTask task = new NotificationTask();
             task.setTime(LocalDateTime.parse(timeString, formatter));
             task.setText(matcher.group(2));

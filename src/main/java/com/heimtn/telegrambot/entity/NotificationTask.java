@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
- * To the created table via liquibase, make a class with Entity annotation.
+ * Main class for create task obj.
  */
 @Entity
 public class NotificationTask {
